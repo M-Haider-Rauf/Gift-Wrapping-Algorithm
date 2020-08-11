@@ -30,8 +30,8 @@ private:
 	void randomize_points();
 	void init_algorithm(); //initial setup for algorithm (should this be called reset or sth?)
 
-	Vector2* const points; // the set of points given
 	std::vector<Vector2> hull; //the points on the convex hull
+	std::vector<Vector2> points;  // the set of points given
 
 	//Following are indices in the array of points corresponding to...
 	size_t curr_idx;  // the most recent point found on hull

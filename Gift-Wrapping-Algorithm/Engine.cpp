@@ -6,10 +6,10 @@
 #include <raylib.h>
 
 #include <random>
+#include <string>
 
 Engine::~Engine()
 {
-	delete[] points;
 }
 
 //singleton
@@ -35,7 +35,7 @@ void Engine::randomize_points()
 
 	static std::default_random_engine ran_gen(std::random_device().operator()());
 
-	for (size_t i = 0; i < POINT_CNT; ++i) {
+	for (size_t i = 0; i < points.size(); ++i) {
 		points[i].x = dist_x(ran_gen);
 		points[i].y = dist_y(ran_gen);
 	}
@@ -43,10 +43,10 @@ void Engine::randomize_points()
 
 void Engine::init_algorithm()
 {
-	leftmost_idx = least_x(points, POINT_CNT);
+	leftmost_idx = least_x(points.data(), points.size());
 
 	curr_idx = leftmost_idx;
-	next_idx = (curr_idx + 1) % POINT_CNT; //get next point in array
+	next_idx = (curr_idx + 1) % points.size(); //get next point in array
 
 	check_idx = 0;
 
@@ -55,7 +55,7 @@ void Engine::init_algorithm()
 }
 
 Engine::Engine()
-	: points(new Vector2[POINT_CNT]{})
+	: points()
 	, curr_idx(0)
 	, next_idx(0)
 	, check_idx(0)
@@ -63,10 +63,14 @@ Engine::Engine()
 	, calculating(false)
 {
 	InitWindow(WIN_WIDTH, WIN_HEIGHT, "BEHTREEN");
-	SetTargetFPS(25);
+	SetTargetFPS(60);
 
 	texture = LoadTexture("img.png");
 
+	points.reserve(MAX_POINTS);
+	points.assign(50, {});
+
+	
 	randomize_points();
 	init_algorithm();
 }
@@ -81,6 +85,25 @@ void Engine::handle_input()
 		else if (IsKeyPressed(KEY_ENTER)) {
 			this->init_algorithm();
 			this->calculating = true;
+		}
+		else if (IsKeyPressed(KEY_UP)) {
+			int new_size = points.size() + 10;
+			if (new_size <= MAX_POINTS) {
+				for (int i = 0; i < 10; ++i) {
+					points.push_back({});
+				}
+				randomize_points();
+				init_algorithm();
+			}
+
+		}
+		else if (IsKeyPressed(KEY_DOWN)) {
+			int new_size = points.size() - 10;
+			if (new_size >= MIN_POINTS) {
+				points.erase(points.end() - 10, points.end());
+				randomize_points();
+				init_algorithm();
+			}
 		}
 
 	}
@@ -112,6 +135,9 @@ void Engine::render() const
 
 	draw_points();
 
+	std::string text = "Points Count: " + std::to_string(points.size());
+	DrawText(text.c_str(), WIN_WIDTH - 300, 10, 30, RED);
+
 	//The most important line of code.
 	DrawTextureEx(texture, {0.0f, 0.0f}, 0.0f, 0.25f, WHITE);
 
@@ -129,7 +155,7 @@ void Engine::draw_points() const
 	//for choosing alternating colors for points
 	size_t c = 0;
 
-	for (size_t i = 0; i < POINT_CNT; ++i) {
+	for (size_t i = 0; i < points.size(); ++i) {
 		DrawCircleV(points[i], POINT_SIZE, colors[c %  len]);
 		++c;
 	}
@@ -174,7 +200,7 @@ void Engine::step_algorithm()
 
 	++check_idx;
 
-	if (check_idx == POINT_CNT) {
+	if (check_idx == points.size()) {
 		curr_idx = next_idx;
 		if (curr_idx == leftmost_idx) {		//if we reach the start point, wer'e done.
 			calculating = false;
@@ -184,7 +210,7 @@ void Engine::step_algorithm()
 			check_idx = 0;
 
 			// now we start checking from point next to previously found point on hull
-			next_idx = (curr_idx + 1) % POINT_CNT; 
+			next_idx = (curr_idx + 1) % points.size(); 
 		}
 	}
 }
