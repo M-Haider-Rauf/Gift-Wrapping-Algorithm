@@ -8,6 +8,7 @@ You can download the release folder and run the exe to check it out.
 # Key Bindings
 * **ENTER** to start the algorithm
 * **SPACE** to randomize points
+* **UP/DOWN** to increase/decrease no. of points
 * **X** to abort currently running calculation
 
 # Dependencies
